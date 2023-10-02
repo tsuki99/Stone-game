@@ -1,107 +1,168 @@
 import java.util.Scanner;
-import java.util.Random;
 
 public class StoneGame {
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis();
-        Random random = new Random();
         Scanner scanner = new Scanner(System.in);
         int playerStones = 10;
         int computerStones = 10;
         int round = 1;
         boolean playerTurn = true;
+        boolean pairOrNot;
 
-        System.out.println("Добро пожаловать в игру \"Stone Game\"!");
-        System.out.println("Вы и компьютер имеете по 10 камней, и по очереди должны угадывать, сколько камней противник спрятал.");
-        System.out.println("За один ход можно спрятать от 1 до 4 камней. Поехали!\n");
+        greetings(); // викликання методу з вітанням
 
         while (playerStones > 0 && computerStones > 0) {
             System.out.println("Раунд " + round + ":");
 
             if (playerTurn) {
-                System.out.println("Вы угадываете, сколько камней спрятал компьютер.");
-                System.out.println("Угадывайте: ");
-                int computerHidden = random.nextInt(Math.min(computerStones, 4)) + 1; // условие для компьютера, чтобы он не ставил больше чем у него есть, и не больше 4-х камней
+                System.out.println("Ви відгадуєте, парну/непарну кількість камінців сховав комп'ютер. (1 - парна,"
+                        + " 2 - непарна)");
+                int computerHidden = (computerStones < 4) ? (int) (Math.random() * computerStones) + 1
+                        : (int) (Math.random() * 4) + 1;
+                System.out.println("Комп'ютер сховав " + computerHidden + declension(computerHidden)); // відображення
+                // кількості схованих комп'ютером кульок, для легшої демонстрації роботи програми
+                System.out.print("Зробіть свій вибір(1/2): ");
                 int playerGuess = scanner.nextInt();
 
-                if (playerGuess < 1 || playerGuess > 4) {
-                    System.out.println("Вы должны ввести число от 1 до 4. Попробуйте снова.");
+                if (playerGuess < 1 || playerGuess > 2) {
+                    System.out.println("Ви повинні обрати число 1 або 2. Спробуйте ще раз." + System.lineSeparator());
                     continue;
                 }
 
-                if (playerGuess == computerHidden) {
-                    System.out.println("Вы угадали!" + " Компьютер спрятал " + computerHidden + " камня. " + " Компьютер теряет " + computerHidden + " камня. Вы получаете " + computerHidden + " камня.\n");
+                pairOrNot = checkPairOrNot(playerGuess, computerHidden);
+
+                if (pairOrNot) {
+                    System.out.println("Ви вгадали!" + " Комп'ютер сховав " + computerHidden
+                            + declension(computerHidden) + " Комп'ютер втрачає " + computerHidden
+                            + declension(computerHidden) + "Ви отримуєте " + computerHidden
+                            + declension(computerHidden));
                     playerStones += computerHidden;
                     computerStones -= computerHidden;
+                    playerStones = keepLimitForPlayer(playerStones);
+                    computerStones = keepLimitForComputer(computerStones);
                 } else {
-                    System.out.println("Вы не угадали. " + " Компьютер спрятал " + computerHidden + " камня. " + " Компьютер получает " + computerHidden + " камня. Вы теряете " + computerHidden + " камня.\n");
+                    System.out.println("Ви не вгадали. " + " Комп'ютер сховав " + computerHidden
+                            + declension(computerHidden) + " Комп'ютер отримує " + computerHidden
+                            + declension(computerHidden) + "Ви втрачаєте "
+                            + computerHidden + declension(computerHidden));
                     playerStones -= computerHidden;
                     computerStones += computerHidden;
+                    playerStones = keepLimitForPlayer(playerStones);
+                    computerStones = keepLimitForComputer(computerStones);
                 }
-
-                System.out.println("---------------------------------------------");
-                System.out.println("Ваш баланс: " + playerStones + " камней. Баланс компьютера: " + computerStones + " камней.");
-                System.out.println("---------------------------------------------\n");
+                showBalance(playerStones, computerStones);
                 playerTurn = false;
-
             } else {
-                System.out.println("Компьютер угадывает, сколько камней вы спрятали.");
-                System.out.println("Прячьте: ");
+                System.out.print("Комп'ютер відгадує, скільки камінців ви сховали." + System.lineSeparator()
+                        + "Зробіть свій вибір(1-4): ");
                 int playerHidden = scanner.nextInt();
-                int computerGuess = (int) (Math.random() * 4) + 1;
 
-                if (playerHidden < 1 || playerHidden > 4) { // условие, чтобы я не мог поставить больше камней чем 4
-                    System.out.println("Вы должны спрятать от 1 до 4 камней. Попробуйте снова.");
-                    continue;
-                }
-                if (playerHidden > playerStones) { // условие, чтобы я не мог поставить больше камней, чем есть в наличии
-                    System.out.println("Вы не можете спрятать больше камней, чем есть в наличии. Попробуйте снова.");
+                if (playerHidden > playerStones) {
+                    System.out.println("Ви не можете сховати більше камінців ніж у вас є! Ваш баланс: " + playerStones
+                            + System.lineSeparator());
                     continue;
                 }
 
-                if (playerHidden == computerGuess) {
-                    System.out.println("Компьютер угадал!" + " Вы спрятали " + playerHidden + " камня. " + " Вы теряете " + playerHidden + " камня. Компьютер получает " + playerHidden + " камня.\n");
+                int computerGuess = (int) (Math.random() * 2) + 1;
+
+                if (playerHidden < 1 || playerHidden > 4) {
+                    System.out.println("Ви повинні ввести число від 1 до 4. Спробуйте ще раз."
+                            + System.lineSeparator());
+                    continue;
+                }
+
+                pairOrNot = checkPairOrNot(computerGuess, playerHidden);
+
+                if (pairOrNot) {
+                    System.out.println("Комп'ютер вгадав! Ви втрачаєте " + playerHidden
+                            + declension(playerHidden) + "Комп'ютер отримує " + playerHidden
+                            + declension(playerHidden));
                     playerStones -= playerHidden;
                     computerStones += playerHidden;
+                    playerStones = keepLimitForPlayer(playerStones);
+                    computerStones = keepLimitForComputer(computerStones);
                 } else {
-                    System.out.println("Компьютер не угадал." + " Вы спрятали " + playerHidden + " камня. " + " Вы получаете " + playerHidden + " камня. Компьютер теряет " + playerHidden + " камня.\n");
+                    System.out.println("Комп'ютер не вгадав. Ви отримуєте " + playerHidden
+                            + declension(playerHidden) + "Комп'ютер втрачає " + playerHidden
+                            + declension(playerHidden));
                     playerStones += playerHidden;
                     computerStones -= playerHidden;
+                    playerStones = keepLimitForPlayer(playerStones);
+                    computerStones = keepLimitForComputer(computerStones);
                 }
-
-                System.out.println("---------------------------------------------");
-                System.out.println("Ваш баланс: " + playerStones + " камней. Баланс компьютера: " + computerStones + " камней.");
-                System.out.println("---------------------------------------------\n");
+                showBalance(playerStones, computerStones);
                 playerTurn = true;
             }
-
             round++;
         }
 
-        if (playerStones == 0) {
-            System.out.println("Вы проиграли! У вас больше нет камней.");
-            long endTime = System.currentTimeMillis();
-            long durationMs = endTime - startTime;
-            long minutes = (durationMs / 1000) / 60;
-            long seconds = (durationMs / 1000) % 60;
-            System.out.printf("Длительность матча: %d минут %d секунд\n", minutes, seconds);
+        if (playerStones <= 0) {
+            System.out.println("Ви програли! Комп'ютер переміг.");
+            gameDuration(startTime);
         } else {
-            System.out.println("Поздравляем, вы победили! Компьютер проиграл все свои камни.");
-            long endTime = System.currentTimeMillis();
-            long durationMs = endTime - startTime;
-            long minutes = (durationMs / 1000) / 60;
-            long seconds = (durationMs / 1000) % 60;
-            System.out.printf("Длительность матча: %d минут %d секунд\n", minutes, seconds);
+            System.out.println("Ви перемогли! Комп'ютер програв.");
+            gameDuration(startTime);
         }
+        repeatGameQuestion();
+    }
 
-        System.out.println("----------------------------------------");
-        System.out.println("Хотите сыграть ещё раз? (1 - да, 2 - нет)");
+    public static void greetings() { // метод з вітанням
+        System.out.println("Ласкаво просиму в гру \"Stone Game\"! " + System.lineSeparator()
+                + "Ви та комп'ютер маєте по 10 камінців, і по черзі повинні відгадувати, скільки камінців сховав "
+                + "ваш опонент." + System.lineSeparator() + "За один хід можна заховати від 1 до 4 камінців. Поїхали!"
+                + System.lineSeparator());
+    }
+
+    public static boolean checkPairOrNot(int guess, int hide) {
+        if (guess == 1 && hide % 2 == 0) {
+            return true;
+        } else if (guess == 2 && !(hide % 2 == 0)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public static String declension(int count) { // метод відмінювання слова "камінець" в залежності від кількості
+        if (count == 1) {
+            return " камінець. ";
+        } else if (count == 0 || (count >= 5 && count <= 20)) {
+            return " камінців. ";
+        } else {
+            return " камінця. ";
+        }
+    }
+
+    public static int keepLimitForPlayer(int playerStones) { // метод утримання ліміту камінців для гравця
+        return (playerStones < 0) ? 0 : (playerStones > 20) ? 20 : playerStones;
+    }
+
+    public static int keepLimitForComputer(int computerStones) { // метод утримання ліміту камінців для комп'ютера
+        return (computerStones < 0) ? 0 : (computerStones > 20) ? 20 : computerStones;
+    }
+
+    public static void showBalance(int playerStones, int computerStones) { // метод для відображення балансу
+        System.out.println("Ваш баланс: " + playerStones + declension(playerStones) + "Баланс комп'ютера: "
+                + computerStones + declension(computerStones) + System.lineSeparator());
+    }
+
+    public static void repeatGameQuestion() { // метод з питанням про повторну гру
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Бажаєте зіграти ще раз? (1 - так, 2 - ні)");
         int playAgain = scanner.nextInt();
         if (playAgain == 1) {
             main(null);
         } else {
-            System.out.println("Спасибо за игру! До свидания.");
+            System.out.println("Дякую за гру! До побачення.");
         }
+    }
 
+    public static void gameDuration(long startTime) { // метод відображення тривалості гри
+        long endTime = System.currentTimeMillis();
+        long durationMs = endTime - startTime;
+        long minutes = (durationMs / 1000) / 60;
+        long seconds = (durationMs / 1000) % 60;
+        System.out.printf("Тривалість матчу: %d хвилин %d секунд\n", minutes, seconds);
     }
 }
